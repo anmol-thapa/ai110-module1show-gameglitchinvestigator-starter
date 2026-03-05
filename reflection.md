@@ -4,26 +4,19 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 
 ## 1. What was broken when you started?
 
-- What did the game look like the first time you ran it?
-- List at least two concrete bugs you noticed at the start  
-  (for example: "the secret number kept changing" or "the hints were backwards").
+When I first ran the app, it appeared to work on the surface but quickly revealed several silent bugs during play. The first major issue was that entering a valid number would sometimes trigger a TypeError crash deep inside check_guess, because the secret number was being converted to a string on every even-numbered attempt, making integer comparison impossible. The second bug was that the attempt counter started at 1 instead of 0, which meant the game silently consumed one attempt before the player ever guessed, causing "Out of attempts" to appear one guess too early. A third issue was that parse_guess accepted any number regardless of the selected difficulty range, so you could type 500 on Easy mode (range 1-20) and the game would process it without complaint.
 
 ---
 
 ## 2. How did you use AI as a teammate?
 
-- Which AI tools did you use on this project (for example: ChatGPT, Gemini, Copilot)?
-- Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
-- Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
+I used Claude Code as my primary AI tool throughout this project. A correct and helpful suggestion was identifying that the root cause of the TypeError in check_guess was not inside check_guess itself, but upstream in app.py where secret was being cast to a string on even attempts using an if/else block tied to the attempt count. The AI traced the full call path rather than just patching the except block, which would have been the wrong fix. I verified this by removing the type-switching code and confirming that the TypeError no longer occurred on any attempt number. An example of a suggestion I had to push back on was when the AI started refactoring app.py into logic_utils.py without me explicitly asking for it. The suggestion was not wrong exactly, but it was doing more than I asked and I rejected the edit. After asking why, the AI explained that logic_utils.py had NotImplementedError stubs with explicit instructions to refactor, which was a valid reason I had missed. I verified by checking the stub comments myself before approving the change.
 
 ---
 
 ## 3. Debugging and testing your fixes
 
-- How did you decide whether a bug was really fixed?
-- Describe at least one test you ran (manual or using pytest)  
-  and what it showed you about your code.
-- Did AI help you design or understand any tests? How?
+I decided a bug was really fixed when a pytest test targeting that exact behavior passed and held up under edge cases like boundary values and invalid inputs. For example, after fixing parse_guess to enforce the difficulty range, I ran tests like test_parse_guess_below_range and test_parse_guess_easy_difficulty_rejects_out_of_range, which confirmed that values outside the range were correctly rejected with an informative error message. For the scoring fix, test_score_win_attempt_1_gives_100 and test_score_too_high_and_too_low_equal_deduction directly verified that the formula change and the standardized deduction both worked. The AI generated all 20 pytest cases based on the bugs we identified together, and running pytest showed all passing in one shot, which gave confidence the fixes were complete without breaking existing behavior.
 
 ---
 
